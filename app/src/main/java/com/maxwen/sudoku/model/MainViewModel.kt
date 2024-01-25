@@ -1,7 +1,6 @@
 package com.maxwen.sudoku.model
 
 import android.util.Log
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import de.sfuhrm.sudoku.Creator
@@ -32,10 +31,14 @@ class MainViewModel : ViewModel() {
     var valueSelect = MutableStateFlow<Int>(-1)
     val difficulty = MutableStateFlow<GameDifficulty>(GameDifficulty.MEDIUM)
     var gameSchema: GameSchema = GameSchemas.SCHEMA_9X9
+    val hideImpossible = MutableStateFlow<Boolean>(false)
+    val showError = MutableStateFlow<Boolean>(false)
 
     init {
         viewModelScope.launch {
             difficulty.update { Settings.getDifficualty() }
+            hideImpossible.update { Settings.getHideImpossible() }
+            showError.update { Settings.getShowError() }
             try {
                 restoreSavedGame()
             } catch (e: Exception) {
@@ -71,8 +74,10 @@ class MainViewModel : ViewModel() {
             matrixList.update { getFullMatrixAsList(matrix) }
             riddleList.update { getFullMatrixAsList(riddle) }
 
-            applySolveList(savedSolvedList)
-            Log.d("sudoko", "solveMatrix " + solveMatrix)
+            if (savedSolvedList.isNotEmpty()) {
+                applySolveList(savedSolvedList)
+                Log.d("sudoko", "solveMatrix " + solveMatrix)
+            }
         }
     }
 
@@ -269,5 +274,27 @@ class MainViewModel : ViewModel() {
 
     fun getDifficulty(): GameDifficulty {
         return difficulty.value
+    }
+
+    fun setHideImpossible(value: Boolean) {
+        hideImpossible.update { value }
+        viewModelScope.launch {
+            Settings.setHideImpossible(value)
+        }
+    }
+
+    fun getHideImpossible(): Boolean {
+        return hideImpossible.value
+    }
+
+    fun setShowError(value: Boolean) {
+        showError.update { value }
+        viewModelScope.launch {
+            Settings.setShowError(value)
+        }
+    }
+
+    fun getShowError(): Boolean {
+        return showError.value
     }
 }

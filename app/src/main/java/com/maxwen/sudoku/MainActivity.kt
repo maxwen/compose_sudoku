@@ -22,14 +22,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -41,13 +44,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
@@ -96,16 +103,26 @@ class MainActivity(
         solveData: List<Int>,
     ) {
         val valueIndex by viewModel.valueIndex.collectAsState()
+        val showError by viewModel.showError.collectAsState()
+
         var size by remember { mutableStateOf(IntSize.Zero) }
         val boxWidth = size.width / columns
-        val boxWidthDp = LocalDensity.current.run { boxWidth.toDp() }
+        val boxWidthDp: Dp = LocalDensity.current.run { boxWidth.toDp() }
+        val boxTextHeightDp: Dp = boxWidthDp * 0.75f
+        val fontSize = with(LocalDensity.current) { boxTextHeightDp.toSp() }
         val borderColor = MaterialTheme.colorScheme.onBackground
         val borderColorSecondary = borderColor.copy(alpha = 0.5f)
         val textColor = MaterialTheme.colorScheme.onBackground
         val textColorSolve = MaterialTheme.colorScheme.primary
         val backgroundColor = MaterialTheme.colorScheme.background
         val selectColor = MaterialTheme.colorScheme.secondaryContainer
+        val selectColorRowColumn = selectColor.copy(alpha = 0.3f)
+        val textColorError = Color.Red
 
+        var valueIndexCoords = Pair(-1, -1)
+        if (valueIndex != -1) {
+            valueIndexCoords = viewModel.getRowColumnForIndex(valueIndex)
+        }
         LazyVerticalGrid(
             columns = GridCells.Fixed(columns),
             modifier = Modifier.onSizeChanged {
@@ -116,6 +133,21 @@ class MainActivity(
                 val riddleValue = riddleData[index]
                 val solveValue = solveData[index]
                 val coords = viewModel.getRowColumnForIndex(index)
+                var boxBackgroundColor = backgroundColor
+
+                if (valueIndex != -1) {
+                    val selectedRowColumn =
+                        coords.first == valueIndexCoords.first || coords.second == valueIndexCoords.second
+                    if (index == valueIndex) {
+                        boxBackgroundColor = selectColor
+                    } else if (selectedRowColumn) {
+                        boxBackgroundColor = selectColorRowColumn
+                    }
+                }
+                val isError =
+                    showError && (solveValue > 0 && solveValue != viewModel.getSolveValueAtIndex(
+                        index
+                    ))
 
                 Row(
                     horizontalArrangement = Arrangement.Center,
@@ -126,20 +158,19 @@ class MainActivity(
                         verticalArrangement = Arrangement.Center,
                         modifier = Modifier
                             .size(boxWidthDp, boxWidthDp)
-
-                            .drawBehind {
+                            .drawWithContent {
+                                this@drawWithContent.drawContent()
                                 if (coords.first == 3 || coords.first == 6) {
                                     drawLine(
-                                        strokeWidth = 4.dp.toPx(),
+                                        strokeWidth = 2.dp.toPx(),
                                         color = borderColor,
                                         start = Offset(x = 0f, y = 0f),
                                         end = Offset(x = boxWidth.toFloat(), y = 0f),
                                     )
                                 }
-
                                 if (coords.second == 3 || coords.second == 6) {
                                     drawLine(
-                                        strokeWidth = 4.dp.toPx(),
+                                        strokeWidth = 2.dp.toPx(),
                                         color = borderColor,
                                         start = Offset(x = 0f, y = 0f),
                                         end = Offset(
@@ -153,13 +184,13 @@ class MainActivity(
                         Box(
                             modifier = Modifier
                                 .size(boxWidthDp, boxWidthDp)
+                                .background(boxBackgroundColor)
                                 .border(
                                     border = BorderStroke(
-                                        width = 1.dp,
+                                        width = 0.5.dp,
                                         color = borderColorSecondary
                                     )
                                 )
-                                .background(if (valueIndex == index) selectColor else backgroundColor)
                                 .clickable(enabled = viewModel.isSudokuCreated() && riddleValue == 0) {
                                     if (riddleValue == 0) {
                                         viewModel.setValueIndex(index)
@@ -172,7 +203,7 @@ class MainActivity(
                             if (riddleValue != 0) {
                                 Text(
                                     text = riddleValue.toString(),
-                                    fontSize = 24.sp,
+                                    fontSize = fontSize,
                                     color = textColor,
                                     textAlign = TextAlign.Center,
                                     modifier = Modifier
@@ -182,8 +213,8 @@ class MainActivity(
                             } else if (solveValue != 0) {
                                 Text(
                                     text = solveValue.toString(),
-                                    fontSize = 24.sp,
-                                    color = textColorSolve,
+                                    fontSize = fontSize,
+                                    color = if (isError) textColorError else textColorSolve,
                                     textAlign = TextAlign.Center,
                                     modifier = Modifier
                                         .fillMaxSize()
@@ -192,7 +223,7 @@ class MainActivity(
                             } else {
                                 Text(
                                     text = "",
-                                    fontSize = 24.sp,
+                                    fontSize = fontSize,
                                     color = textColor,
                                     textAlign = TextAlign.Center,
                                     modifier = Modifier
@@ -211,16 +242,17 @@ class MainActivity(
     fun NumberLine(columns: Int) {
         val valueIndex by viewModel.valueIndex.collectAsState()
         val possibleValues by viewModel.possibleValues.collectAsState()
+        val hideImpossible by viewModel.hideImpossible.collectAsState()
+
         val selectList = (1..9).map { it }
         var size by remember { mutableStateOf(IntSize.Zero) }
         val boxWidth = size.width / columns
         val boxWidthDp = LocalDensity.current.run { boxWidth.toDp() }
+        val boxTextHeightDp: Dp = boxWidthDp * 0.75f
+        val fontSize = with(LocalDensity.current) { boxTextHeightDp.toSp() }
         val borderColor = MaterialTheme.colorScheme.onBackground
-        val borderColorSecondary = borderColor.copy(alpha = 0.5f)
         val textColor = MaterialTheme.colorScheme.onBackground
-        val textColorSolve = MaterialTheme.colorScheme.primary
         val backgroundColor = MaterialTheme.colorScheme.background
-        val selectColor = MaterialTheme.colorScheme.secondaryContainer
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(columns),
@@ -229,7 +261,7 @@ class MainActivity(
             }) {
             items(selectList.size) { index ->
                 val v = selectList[index]
-                val text = v.toString() //if (possibleValues.contains(v)) v.toString() else ""
+                val text = if (hideImpossible && !possibleValues.contains(v)) "" else v.toString()
 
                 Box(
                     contentAlignment = Alignment.Center,
@@ -255,7 +287,7 @@ class MainActivity(
                     if (valueIndex == -1) {
                         Text(
                             text = "",
-                            fontSize = 24.sp,
+                            fontSize = fontSize,
                             color = textColor,
                             textAlign = TextAlign.Center,
                             modifier = Modifier
@@ -266,8 +298,8 @@ class MainActivity(
                     } else {
                         Text(
                             text = text,
-                            fontSize = 24.sp,
-                            color = if (possibleValues.contains(v)) textColor else textColorSolve,
+                            fontSize = fontSize,
+                            color = textColor,
                             textAlign = TextAlign.Center,
                             modifier = Modifier
                                 .fillMaxSize()
@@ -284,12 +316,13 @@ class MainActivity(
         val isSolved by viewModel.isSolved.collectAsState()
         val valueIndex by viewModel.valueIndex.collectAsState()
         val difficulty by viewModel.difficulty.collectAsState()
+        val showError by viewModel.showError.collectAsState()
+        val hideImpossible by viewModel.hideImpossible.collectAsState()
 
         Column {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(IntrinsicSize.Min),
             ) {
                 Button(
                     onClick = {
@@ -341,11 +374,10 @@ class MainActivity(
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(5.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(IntrinsicSize.Min),
             ) {
                 Button(
                     onClick = {
@@ -378,8 +410,7 @@ class MainActivity(
             Spacer(modifier = Modifier.height(10.dp))
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(IntrinsicSize.Min),
+                    .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
@@ -402,33 +433,26 @@ class MainActivity(
                 Text("Hard")
 
             }
-            if (isSolved) {
-                Spacer(modifier = Modifier.height(10.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.Green),
-                    ) {
-                        Text(
-                            text = "Solved",
-                            fontSize = 24.sp,
-                            color = Color.White,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
-                }
-            } else {
-                Spacer(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(58.dp)
+            Spacer(modifier = Modifier.height(5.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Checkbox(
+                    checked = showError,
+                    onCheckedChange = { viewModel.setShowError(!showError) }
                 )
+                Text("Show error")
+
+                Spacer(modifier = Modifier.width(10.dp))
+
+                Checkbox(
+                    checked = hideImpossible,
+                    onCheckedChange = { viewModel.setHideImpossible(!hideImpossible) }
+                )
+                Text("Hide impossible")
             }
         }
     }
@@ -438,6 +462,8 @@ class MainActivity(
     fun Board() {
         val riddleData by viewModel.riddleList.collectAsState()
         val solveData by viewModel.solveList.collectAsState()
+        val isSolved by viewModel.isSolved.collectAsState()
+
         val columns = 9
         val landscape =
             LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -463,8 +489,8 @@ class MainActivity(
                         Column(
                             modifier = Modifier.border(
                                 border = BorderStroke(
-                                    width = 3.dp,
-                                    color = borderColor
+                                    width = 2.dp,
+                                    color = if (isSolved) Color.Green else borderColor
                                 )
                             )
                         ) {
@@ -497,18 +523,18 @@ class MainActivity(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(16.dp),
+                        .padding(8.dp),
                 ) {
                     Spacer(modifier = Modifier.weight(0.1f))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Spacer(modifier = Modifier.weight(0.1f))
                         Column(
                             modifier = Modifier
-                                .weight(0.4f)
+                                .weight(0.45f)
                                 .border(
                                     border = BorderStroke(
-                                        width = 3.dp,
-                                        color = borderColor
+                                        width = 2.dp,
+                                        color = if (isSolved) Color.Green else borderColor
                                     )
                                 )
                         ) {
@@ -518,9 +544,8 @@ class MainActivity(
                                 solveData = solveData
                             )
                         }
-                        Spacer(modifier = Modifier.weight(0.05f))
-                        Column(modifier = Modifier.weight(0.4f)) {
-                            Spacer(modifier = Modifier.weight(0.1f))
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column(modifier = Modifier.weight(0.45f)) {
                             Column(
                                 modifier = Modifier.border(
                                     border = BorderStroke(
@@ -531,9 +556,8 @@ class MainActivity(
                             ) {
                                 NumberLine(columns = columns)
                             }
-                            Spacer(modifier = Modifier.height(10.dp))
+                            Spacer(modifier = Modifier.height(5.dp))
                             Buttons()
-                            Spacer(modifier = Modifier.weight(0.1f))
                         }
                         Spacer(modifier = Modifier.weight(0.1f))
                     }

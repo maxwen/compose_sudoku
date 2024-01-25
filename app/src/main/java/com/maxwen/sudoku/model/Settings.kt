@@ -1,6 +1,5 @@
 package com.maxwen.sudoku.model
 
-import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import kotlinx.coroutines.flow.first
@@ -14,6 +13,9 @@ object Settings {
     private val SOLVE_LIST = stringPreferencesKey("solveList")
     private val MATRIX_LIST = stringPreferencesKey("matrixList")
     private val RIDDLE_LIST = stringPreferencesKey("riddleList")
+    private val HIDE_IMPOSSIBLE = booleanPreferencesKey("hideImpossible")
+    private val SHOW_ERROR = booleanPreferencesKey("showError")
+
     private const val SEPARATOR = ","
 
 
@@ -25,11 +27,38 @@ object Settings {
         }
     }
 
-    suspend fun getDifficualty(default: GameDifficulty = GameDifficulty.MEDIUM): GameDifficulty {
+    suspend fun getDifficualty(): GameDifficulty {
         val settings = myDataStore.data.first().toPreferences()
         val intValue = settings[DIFFICULTY] ?: GameDifficulty.MEDIUM.ordinal
         return GameDifficulty.entries[intValue]
     }
+
+    suspend fun setHideImpossible(value: Boolean) {
+        Result.runCatching {
+            myDataStore.edit { settings ->
+                settings[HIDE_IMPOSSIBLE] = value
+            }
+        }
+    }
+
+    suspend fun getHideImpossible(): Boolean {
+        val settings = myDataStore.data.first().toPreferences()
+        return settings[HIDE_IMPOSSIBLE] ?: false
+    }
+
+    suspend fun setShowError(value: Boolean) {
+        Result.runCatching {
+            myDataStore.edit { settings ->
+                settings[SHOW_ERROR] = value
+            }
+        }
+    }
+
+    suspend fun getShowError(): Boolean {
+        val settings = myDataStore.data.first().toPreferences()
+        return settings[SHOW_ERROR] ?: false
+    }
+
 
     suspend fun saveRiddle(matrixList: List<Int>, riddleList: List<Int>) {
         Result.runCatching {
@@ -58,7 +87,11 @@ object Settings {
         }
     }
 
-    suspend fun restoreRiddleAndSolveList(matrixList: MutableList<Int>, riddleList: MutableList<Int>, solveList: MutableList<Int>) {
+    suspend fun restoreRiddleAndSolveList(
+        matrixList: MutableList<Int>,
+        riddleList: MutableList<Int>,
+        solveList: MutableList<Int>
+    ) {
         val settings = myDataStore.data.first().toPreferences()
         settings[MATRIX_LIST]?.let {
             val items = it.split(SEPARATOR)
