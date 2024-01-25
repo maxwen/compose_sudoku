@@ -60,8 +60,9 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3:1.2.0-beta02")
 
-    implementation("de.sfuhrm:sudoku:5.0.1")
-    //implementation("de.sfuhrm:sudoku:5.0.2-SNAPSHOT")
+    implementation("de.sfuhrm:sudoku:5.0.2-SNAPSHOT")
+    implementation("androidx.datastore:datastore-core:1.0.0")
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
