@@ -45,33 +45,35 @@ class MainViewModel : ViewModel() {
     }
 
     private suspend fun restoreSavedGame() {
-        matrix = GameMatrixFactory().newGameMatrix(gameSchema)
-        riddle = GameMatrixFactory().newRiddle(gameSchema)
-        solveMatrix = GameMatrixFactory().newRiddle(gameSchema)
-
         val savedMatrixList = mutableListOf<Int>()
         val savedRiddleList = mutableListOf<Int>()
         val savedSolvedList = mutableListOf<Int>()
 
         Settings.restoreRiddleAndSolveList(savedMatrixList, savedRiddleList, savedSolvedList)
-        savedMatrixList.forEachIndexed { index, value ->
-            setNumberInMatrixInternal(matrix, index, value)
+        if (savedMatrixList.isNotEmpty() && savedRiddleList.isNotEmpty()) {
+            matrix = GameMatrixFactory().newGameMatrix(gameSchema)
+            riddle = GameMatrixFactory().newRiddle(gameSchema)
+            solveMatrix = GameMatrixFactory().newRiddle(gameSchema)
+
+            savedMatrixList.forEachIndexed { index, value ->
+                setNumberInMatrixInternal(matrix, index, value)
+            }
+            Log.d("sudoko", "matrix " + matrix)
+
+            savedRiddleList.forEachIndexed { index, value ->
+                setNumberInMatrixInternal(riddle, index, value)
+            }
+            Log.d("sudoko", "riddle " + riddle)
+
+            solveMatrix!!.setAll(riddle!!.array)
+            Log.d("sudoko", "solveMatrix " + solveMatrix)
+
+            matrixList.update { getFullMatrixAsList(matrix) }
+            riddleList.update { getFullMatrixAsList(riddle) }
+
+            applySolveList(savedSolvedList)
+            Log.d("sudoko", "solveMatrix " + solveMatrix)
         }
-        Log.d("sudoko", "matrix " + matrix)
-
-        savedRiddleList.forEachIndexed { index, value ->
-            setNumberInMatrixInternal(riddle, index, value)
-        }
-        Log.d("sudoko", "riddle " + riddle)
-
-        solveMatrix!!.setAll(riddle!!.array)
-        Log.d("sudoko", "solveMatrix " + solveMatrix)
-
-        matrixList.update { getFullMatrixAsList(matrix) }
-        riddleList.update { getFullMatrixAsList(riddle) }
-
-        applySolveList(savedSolvedList)
-        Log.d("sudoko", "solveMatrix " + solveMatrix)
     }
 
 

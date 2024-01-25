@@ -99,6 +99,12 @@ class MainActivity(
         var size by remember { mutableStateOf(IntSize.Zero) }
         val boxWidth = size.width / columns
         val boxWidthDp = LocalDensity.current.run { boxWidth.toDp() }
+        val borderColor = MaterialTheme.colorScheme.onBackground
+        val borderColorSecondary = borderColor.copy(alpha = 0.5f)
+        val textColor = MaterialTheme.colorScheme.onBackground
+        val textColorSolve = MaterialTheme.colorScheme.primary
+        val backgroundColor = MaterialTheme.colorScheme.background
+        val selectColor = MaterialTheme.colorScheme.secondaryContainer
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(columns),
@@ -125,7 +131,7 @@ class MainActivity(
                                 if (coords.first == 3 || coords.first == 6) {
                                     drawLine(
                                         strokeWidth = 4.dp.toPx(),
-                                        color = Color.Black,
+                                        color = borderColor,
                                         start = Offset(x = 0f, y = 0f),
                                         end = Offset(x = boxWidth.toFloat(), y = 0f),
                                     )
@@ -134,7 +140,7 @@ class MainActivity(
                                 if (coords.second == 3 || coords.second == 6) {
                                     drawLine(
                                         strokeWidth = 4.dp.toPx(),
-                                        color = Color.Black,
+                                        color = borderColor,
                                         start = Offset(x = 0f, y = 0f),
                                         end = Offset(
                                             x = 0f,
@@ -150,10 +156,10 @@ class MainActivity(
                                 .border(
                                     border = BorderStroke(
                                         width = 1.dp,
-                                        color = Color.LightGray
+                                        color = borderColorSecondary
                                     )
                                 )
-                                .background(if (valueIndex == index) Color.LightGray else Color.White)
+                                .background(if (valueIndex == index) selectColor else backgroundColor)
                                 .clickable(enabled = viewModel.isSudokuCreated() && riddleValue == 0) {
                                     if (riddleValue == 0) {
                                         viewModel.setValueIndex(index)
@@ -167,7 +173,7 @@ class MainActivity(
                                 Text(
                                     text = riddleValue.toString(),
                                     fontSize = 24.sp,
-                                    color = Color.Black,
+                                    color = textColor,
                                     textAlign = TextAlign.Center,
                                     modifier = Modifier
                                         .fillMaxSize()
@@ -177,7 +183,7 @@ class MainActivity(
                                 Text(
                                     text = solveValue.toString(),
                                     fontSize = 24.sp,
-                                    color = Color.Blue,
+                                    color = textColorSolve,
                                     textAlign = TextAlign.Center,
                                     modifier = Modifier
                                         .fillMaxSize()
@@ -187,7 +193,7 @@ class MainActivity(
                                 Text(
                                     text = "",
                                     fontSize = 24.sp,
-                                    color = Color.Black,
+                                    color = textColor,
                                     textAlign = TextAlign.Center,
                                     modifier = Modifier
                                         .fillMaxSize()
@@ -209,6 +215,12 @@ class MainActivity(
         var size by remember { mutableStateOf(IntSize.Zero) }
         val boxWidth = size.width / columns
         val boxWidthDp = LocalDensity.current.run { boxWidth.toDp() }
+        val borderColor = MaterialTheme.colorScheme.onBackground
+        val borderColorSecondary = borderColor.copy(alpha = 0.5f)
+        val textColor = MaterialTheme.colorScheme.onBackground
+        val textColorSolve = MaterialTheme.colorScheme.primary
+        val backgroundColor = MaterialTheme.colorScheme.background
+        val selectColor = MaterialTheme.colorScheme.secondaryContainer
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(columns),
@@ -226,10 +238,10 @@ class MainActivity(
                         .border(
                             border = BorderStroke(
                                 width = 1.dp,
-                                color = Color.LightGray
+                                color = borderColor
                             )
                         )
-                        .background(Color.White)
+                        .background(backgroundColor)
                         .clickable(enabled = viewModel.isSudokuCreated()) {
                             if (valueIndex != -1) {
                                 viewModel.setValueSelect(index + 1)
@@ -244,7 +256,7 @@ class MainActivity(
                         Text(
                             text = "",
                             fontSize = 24.sp,
-                            color = Color.Black,
+                            color = textColor,
                             textAlign = TextAlign.Center,
                             modifier = Modifier
                                 .fillMaxSize()
@@ -255,7 +267,7 @@ class MainActivity(
                         Text(
                             text = text,
                             fontSize = 24.sp,
-                            color = if (possibleValues.contains(v)) Color.Black else Color.Red,
+                            color = if (possibleValues.contains(v)) textColor else textColorSolve,
                             textAlign = TextAlign.Center,
                             modifier = Modifier
                                 .fillMaxSize()
@@ -429,6 +441,7 @@ class MainActivity(
         val columns = 9
         val landscape =
             LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+        val borderColor = MaterialTheme.colorScheme.onBackground
 
         BoxWithConstraints {
             Log.d(
@@ -451,7 +464,7 @@ class MainActivity(
                             modifier = Modifier.border(
                                 border = BorderStroke(
                                     width = 3.dp,
-                                    color = Color.Black
+                                    color = borderColor
                                 )
                             )
                         ) {
@@ -466,7 +479,7 @@ class MainActivity(
                             modifier = Modifier.border(
                                 border = BorderStroke(
                                     width = 2.dp,
-                                    color = Color.Black
+                                    color = borderColor
                                 )
                             )
                         ) {
@@ -495,7 +508,7 @@ class MainActivity(
                                 .border(
                                     border = BorderStroke(
                                         width = 3.dp,
-                                        color = Color.Black
+                                        color = borderColor
                                     )
                                 )
                         ) {
@@ -512,7 +525,7 @@ class MainActivity(
                                 modifier = Modifier.border(
                                     border = BorderStroke(
                                         width = 2.dp,
-                                        color = Color.Black
+                                        color = borderColor
                                     )
                                 )
                             ) {
