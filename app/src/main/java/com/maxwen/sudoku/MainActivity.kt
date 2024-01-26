@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,7 +31,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -41,9 +39,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -53,10 +49,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -68,8 +61,7 @@ import com.maxwen.sudoku.ui.theme.isTablet
 import kotlinx.coroutines.launch
 
 
-class MainActivity(
-) : ComponentActivity() {
+class MainActivity : ComponentActivity() {
     private val viewModel by viewModels<MainViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -82,7 +74,7 @@ class MainActivity(
                 Surface(
                     color = MaterialTheme.colorScheme.background,
                 ) {
-                    Scaffold() {
+                    Scaffold {
                         Column(modifier = Modifier.padding(it)) {
                             Board()
                         }
@@ -313,7 +305,6 @@ class MainActivity(
 
     @Composable
     fun Buttons() {
-        val isSolved by viewModel.isSolved.collectAsState()
         val valueIndex by viewModel.valueIndex.collectAsState()
         val difficulty by viewModel.difficulty.collectAsState()
         val showError by viewModel.showError.collectAsState()
@@ -360,7 +351,7 @@ class MainActivity(
                         text = "Solve"
                     )
                 }
-                Button(
+                /*Button(
                     onClick = {
                         viewModel.fillAllSolveValues()
                     },
@@ -372,7 +363,7 @@ class MainActivity(
                     Text(
                         text = "All"
                     )
-                }
+                }*/
             }
             Spacer(modifier = Modifier.height(5.dp))
             Row(
@@ -433,7 +424,6 @@ class MainActivity(
                 Text("Hard")
 
             }
-            Spacer(modifier = Modifier.height(5.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth(),
@@ -446,7 +436,7 @@ class MainActivity(
                 )
                 Text("Show error")
 
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.width(5.dp))
 
                 Checkbox(
                     checked = hideImpossible,
@@ -457,7 +447,6 @@ class MainActivity(
         }
     }
 
-    @OptIn(ExperimentalComposeUiApi::class)
     @Composable
     fun Board() {
         val riddleData by viewModel.riddleList.collectAsState()
@@ -472,7 +461,7 @@ class MainActivity(
         BoxWithConstraints {
             Log.d(
                 "sudoku",
-                "maxWidth = " + maxWidth + " isTablet = " + isTablet + " landscape = " + landscape
+                "maxWidth = $maxWidth isTablet = $isTablet landscape = $landscape"
             )
             val mw = maxWidth
             if (mw < 400.dp || (isTablet && !landscape)) {
