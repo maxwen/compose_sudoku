@@ -25,9 +25,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.material3.Button
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedIconButton
+import androidx.compose.material3.PlainTooltipBox
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -46,6 +54,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
@@ -64,6 +74,7 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     private val viewModel by viewModels<MainViewModel>()
 
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -74,7 +85,25 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     color = MaterialTheme.colorScheme.background,
                 ) {
-                    Scaffold {
+                    val difficulty by viewModel.difficulty.collectAsState()
+
+                    Scaffold(floatingActionButton = {
+                        PlainTooltipBox(tooltip = { Text("New Sudoku") }) {
+                            FloatingActionButton(
+                                modifier = Modifier.tooltipAnchor(),
+                                onClick = {
+                                    viewModel.resetSelection()
+                                    viewModel.createSudoku(difficulty = difficulty)
+                                }, containerColor = MaterialTheme.colorScheme.secondaryContainer
+                            ) {
+                                Icon(
+                                    painterResource(R.drawable.ic_grid),
+                                    contentDescription = "New",
+                                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                            }
+                        }
+                    }) {
                         Column(modifier = Modifier.padding(it)) {
                             Board()
                         }
@@ -253,7 +282,8 @@ class MainActivity : ComponentActivity() {
             }) {
             items(selectList.size) { index ->
                 val v = selectList[index]
-                val text = if (hideImpossible && !possibleValues.contains(v)) "" else v.toString()
+                val possibleValue = if (hideImpossible) possibleValues.contains(v) else true
+                val text = if (possibleValue) v.toString() else ""
 
                 Box(
                     contentAlignment = Alignment.Center,
@@ -266,7 +296,7 @@ class MainActivity : ComponentActivity() {
                             )
                         )
                         .background(backgroundColor)
-                        .clickable(enabled = viewModel.isSudokuCreated()) {
+                        .clickable(enabled = viewModel.isSudokuCreated() && possibleValue) {
                             if (valueIndex != -1) {
                                 viewModel.setValueSelect(index + 1)
                                 viewModel.setNumberInRiddle(
@@ -303,146 +333,188 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun Buttons() {
         val valueIndex by viewModel.valueIndex.collectAsState()
         val difficulty by viewModel.difficulty.collectAsState()
         val showError by viewModel.showError.collectAsState()
         val hideImpossible by viewModel.hideImpossible.collectAsState()
+        val solveList by viewModel.solveList.collectAsState()
 
         Column {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
             ) {
-                Button(
-                    onClick = {
-                        if (valueIndex != -1) {
-                            viewModel.setNumberInRiddle(
-                                valueIndex,
-                                0
-                            )
-                        }
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(4.dp),
-                    enabled = valueIndex != -1
-                ) {
-                    Text(
-                        text = "Clear"
-                    )
+                Spacer(modifier = Modifier.weight(1.0f))
+                PlainTooltipBox(tooltip = { Text("Clear box") }) {
+                    FilledIconButton(
+                        onClick = {
+                            if (valueIndex != -1) {
+                                viewModel.setNumberInRiddle(
+                                    valueIndex,
+                                    0
+                                )
+                            }
+                        },
+                        modifier = Modifier
+                            .width(72.dp)
+                            .padding(4.dp)
+                            .tooltipAnchor(),
+                        enabled = valueIndex != -1
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_grid_clear),
+                            contentDescription = "Clear"
+                        )
+                    }
                 }
-                Button(
-                    onClick = {
-                        if (valueIndex != -1) {
-                            viewModel.setNumberInRiddle(
-                                valueIndex,
-                                viewModel.getSolveValueAtIndex(valueIndex)
-                            )
-                        }
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(4.dp),
-                    enabled = valueIndex != -1
-                ) {
-                    Text(
-                        text = "Solve"
-                    )
+                PlainTooltipBox(tooltip = { Text("Solve box") }) {
+                    FilledIconButton(
+                        onClick = {
+                            if (valueIndex != -1) {
+                                viewModel.setNumberInRiddle(
+                                    valueIndex,
+                                    viewModel.getSolveValueAtIndex(valueIndex)
+                                )
+                            }
+                        },
+                        modifier = Modifier
+                            .width(72.dp)
+                            .padding(4.dp)
+                            .tooltipAnchor(),
+                        enabled = valueIndex != -1
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_grid_solve),
+                            contentDescription = "Solve"
+                        )
+                    }
                 }
-                /*Button(
-                    onClick = {
-                        viewModel.fillAllSolveValues()
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(4.dp),
-                    enabled = viewModel.isSudokuCreated(),
-                ) {
-                    Text(
-                        text = "All"
-                    )
+                /*PlainTooltipBox(tooltip = { Text("Solve grid") }) {
+                    FilledIconButton(
+                        onClick = {
+                            viewModel.fillAllSolveValues()
+                        },
+                        modifier = Modifier
+                            .width(72.dp)
+                            .padding(4.dp)
+                            .tooltipAnchor(),
+                        enabled = viewModel.isSudokuCreated(),
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_grid_solve),
+                            contentDescription = "Solve grid"
+                        )
+                    }
                 }*/
+                PlainTooltipBox(tooltip = { Text("Clear grid") }) {
+                    FilledIconButton(
+                        onClick = {
+                            viewModel.resetSelection()
+                            viewModel.resetRiddle()
+                        },
+                        modifier = Modifier
+                            .width(72.dp)
+                            .padding(4.dp)
+                            .tooltipAnchor(),
+                        enabled = viewModel.isSudokuCreated() && viewModel.isSudokuFilled()
+                    ) {
+                        Icon(
+                            painterResource(id = R.drawable.ic_grid_reset),
+                            contentDescription = "Reset"
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.weight(1.0f))
             }
-            Spacer(modifier = Modifier.height(5.dp))
+            Spacer(modifier = Modifier.height(10.dp))
+
+            val difficultyList =
+                listOf(GameDifficulty.EASY, GameDifficulty.MEDIUM, GameDifficulty.EXPERT)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .selectableGroup(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
             ) {
-                Button(
-                    onClick = {
-                        viewModel.resetSelection()
-                        viewModel.createSudoku(difficulty = difficulty)
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(4.dp)
-                ) {
-                    Text(
-                        text = "New"
-                    )
-                }
-                Button(
-                    onClick = {
-                        viewModel.resetSelection()
-                        viewModel.resetRiddle()
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(4.dp),
-                    enabled = viewModel.isSudokuCreated()
-                ) {
-                    Text(
-                        text = "Reset"
-                    )
+                difficultyList.forEach { value ->
+                    Row(
+                        modifier = Modifier
+                            .height(44.dp)
+                            .selectable(
+                                selected = (difficulty == value),
+                                onClick = { viewModel.setDifficulty(value) },
+                                role = Role.RadioButton
+                            )
+                            .padding(horizontal = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        RadioButton(
+                            selected = difficulty == value,
+                            onClick = null // null recommended for accessibility with screenreaders
+                        )
+                        Text(
+                            value.label,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(start = 12.dp)
+                        )
+                    }
                 }
             }
-            Spacer(modifier = Modifier.height(10.dp))
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                RadioButton(
-                    selected = difficulty == GameDifficulty.EASY,
-                    onClick = { viewModel.setDifficulty(GameDifficulty.EASY) }
-                )
-                Text("Easy")
-
-                RadioButton(
-                    selected = difficulty == GameDifficulty.MEDIUM,
-                    onClick = { viewModel.setDifficulty(GameDifficulty.MEDIUM) }
-                )
-                Text("Medium")
-
-                RadioButton(
-                    selected = difficulty == GameDifficulty.EXPERT,
-                    onClick = { viewModel.setDifficulty(GameDifficulty.EXPERT) }
-                )
-                Text("Hard")
-
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Checkbox(
-                    checked = showError,
-                    onCheckedChange = { viewModel.setShowError(!showError) }
-                )
-                Text("Show error")
-
-                Spacer(modifier = Modifier.width(5.dp))
-
-                Checkbox(
-                    checked = hideImpossible,
-                    onCheckedChange = { viewModel.setHideImpossible(!hideImpossible) }
-                )
-                Text("Hide impossible")
+                horizontalArrangement = Arrangement.Center,
+            )
+            {
+                Row(
+                    Modifier
+                        .height(44.dp)
+                        .toggleable(
+                            value = showError,
+                            onValueChange = { viewModel.setShowError(!showError) },
+                            role = Role.Checkbox
+                        )
+                        .padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = showError,
+                        onCheckedChange = null // null recommended for accessibility with screenreaders
+                    )
+                    Text(
+                        "Show error",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(start = 12.dp)
+                    )
+                }
+                Row(
+                    Modifier
+                        .height(44.dp)
+                        .toggleable(
+                            value = hideImpossible,
+                            onValueChange = { viewModel.setHideImpossible(!hideImpossible) },
+                            role = Role.Checkbox
+                        )
+                        .padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = hideImpossible,
+                        onCheckedChange = null // null recommended for accessibility with screenreaders
+                    )
+                    Text(
+                        text = "Hide impossible",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(start = 12.dp)
+                    )
+                }
             }
         }
     }
@@ -500,7 +572,7 @@ class MainActivity : ComponentActivity() {
                         ) {
                             NumberLine(columns = columns)
                         }
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.height(20.dp))
                         Buttons()
                         Spacer(modifier = Modifier.weight(0.1f))
                     }
@@ -545,7 +617,7 @@ class MainActivity : ComponentActivity() {
                             ) {
                                 NumberLine(columns = columns)
                             }
-                            Spacer(modifier = Modifier.height(5.dp))
+                            Spacer(modifier = Modifier.height(20.dp))
                             Buttons()
                         }
                         Spacer(modifier = Modifier.weight(0.1f))

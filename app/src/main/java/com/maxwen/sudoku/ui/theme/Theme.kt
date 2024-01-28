@@ -3,6 +3,7 @@ package com.maxwen.sudoku.ui.theme
 import android.app.Activity
 import android.content.res.Configuration
 import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -56,9 +57,18 @@ fun SudokuTheme(
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
-        dynamicColor -> {
+        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            if (darkTheme) dynamicDarkColorScheme(context).copy(
+//                primary = DarkColorScheme.primary,
+//                secondary = DarkColorScheme.secondary,
+//                tertiary = DarkColorScheme.tertiary
+            )
+            else dynamicLightColorScheme(context).copy(
+//                primary = LightColorScheme.primary,
+//                secondary = LightColorScheme.secondary,
+//                tertiary = LightColorScheme.tertiary
+            )
         }
 
         darkTheme -> DarkColorScheme

@@ -83,7 +83,14 @@ class MainViewModel : ViewModel() {
 
 
     fun isSudokuCreated(): Boolean {
-        return matrix != null
+        return riddle != null
+    }
+
+    fun isSudokuFilled(): Boolean {
+        if (riddle != null) {
+            return solveList.value.any { value -> value > 0 }
+        }
+        return false
     }
 
     fun createSudoku(
