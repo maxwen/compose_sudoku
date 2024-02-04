@@ -25,14 +25,14 @@ class MainViewModel : ViewModel() {
 
     val riddleList = MutableStateFlow<List<Int>>(MutableList(81) { 0 })
     val solveList = MutableStateFlow<List<Int>>(MutableList(81) { 0 })
-    val isSolved = MutableStateFlow<Boolean>(false)
-    var valueIndex = MutableStateFlow<Int>(-1)
+    val isSolved = MutableStateFlow(false)
+    var valueIndex = MutableStateFlow(-1)
     var possibleValues = MutableStateFlow<List<Int>>(mutableListOf())
-    var valueSelect = MutableStateFlow<Int>(-1)
-    val difficulty = MutableStateFlow<GameDifficulty>(GameDifficulty.MEDIUM)
-    var gameSchema: GameSchema = GameSchemas.SCHEMA_9X9
-    val hideImpossible = MutableStateFlow<Boolean>(false)
-    val showError = MutableStateFlow<Boolean>(false)
+    var valueSelect = MutableStateFlow(-1)
+    val difficulty = MutableStateFlow(GameDifficulty.MEDIUM)
+    private var gameSchema: GameSchema = GameSchemas.SCHEMA_9X9
+    val hideImpossible = MutableStateFlow(false)
+    val showError = MutableStateFlow(false)
 
     init {
         viewModelScope.launch {
@@ -61,22 +61,22 @@ class MainViewModel : ViewModel() {
             savedMatrixList.forEachIndexed { index, value ->
                 setNumberInMatrixInternal(matrix, index, value)
             }
-            Log.d("sudoko", "matrix " + matrix)
+            Log.d("sudoko", "matrix $matrix")
 
             savedRiddleList.forEachIndexed { index, value ->
                 setNumberInMatrixInternal(riddle, index, value)
             }
-            Log.d("sudoko", "riddle " + riddle)
+            Log.d("sudoko", "riddle $riddle")
 
             solveMatrix!!.setAll(riddle!!.array)
-            Log.d("sudoko", "solveMatrix " + solveMatrix)
+            Log.d("sudoko", "solveMatrix $solveMatrix")
 
             matrixList.update { getFullMatrixAsList(matrix) }
             riddleList.update { getFullMatrixAsList(riddle) }
 
             if (savedSolvedList.isNotEmpty()) {
                 applySolveList(savedSolvedList)
-                Log.d("sudoko", "solveMatrix " + solveMatrix)
+                Log.d("sudoko", "solveMatrix $solveMatrix")
             }
         }
     }
@@ -219,22 +219,22 @@ class MainViewModel : ViewModel() {
         return matrixList.value[index]
     }
 
-    fun fillAllSolveValues() {
-        val allSolveList = mutableListOf<Int>()
-        allSolveList.addAll(solveList.value)
-        solveList.value.forEachIndexed { index, value ->
-            if (value == 0) {
-                val solveValue = getSolveValueAtIndex(index)
-                setNumberInSolveMatrix(index, solveValue)
-                allSolveList[index] = solveValue
-            }
-        }
-        solveList.update {
-            allSolveList
-        }
-        updateisSolved()
-        saveState()
-    }
+//    fun fillAllSolveValues() {
+//        val allSolveList = mutableListOf<Int>()
+//        allSolveList.addAll(solveList.value)
+//        solveList.value.forEachIndexed { index, value ->
+//            if (value == 0) {
+//                val solveValue = getSolveValueAtIndex(index)
+//                setNumberInSolveMatrix(index, solveValue)
+//                allSolveList[index] = solveValue
+//            }
+//        }
+//        solveList.update {
+//            allSolveList
+//        }
+//        updateisSolved()
+//        saveState()
+//    }
 
     fun getRowColumnForIndex(index: Int): Pair<Int, Int> {
         val row = index / 9
