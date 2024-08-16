@@ -59,16 +59,7 @@ fun SudokuTheme(
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context).copy(
-//                primary = DarkColorScheme.primary,
-//                secondary = DarkColorScheme.secondary,
-//                tertiary = DarkColorScheme.tertiary
-            )
-            else dynamicLightColorScheme(context).copy(
-//                primary = LightColorScheme.primary,
-//                secondary = LightColorScheme.secondary,
-//                tertiary = LightColorScheme.tertiary
-            )
+            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
 
         darkTheme -> DarkColorScheme

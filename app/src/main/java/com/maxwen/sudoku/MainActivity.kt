@@ -56,11 +56,14 @@ import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PlainTooltipBox
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -113,9 +116,16 @@ class MainActivity : ComponentActivity() {
                     val difficulty by viewModel.difficulty.collectAsState()
 
                     Scaffold(floatingActionButton = {
-                        PlainTooltipBox(tooltip = { Text("New Sudoku") }) {
+                        TooltipBox(
+                            positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                            tooltip = {
+                                PlainTooltip {
+                                    Text("New Sudoku")
+                                }
+                            },
+                            state = rememberTooltipState(),
+                        ) {
                             FloatingActionButton(
-                                modifier = Modifier.tooltipAnchor(),
                                 onClick = {
                                     viewModel.resetSelection()
                                     viewModel.createSudoku(difficulty = difficulty)
@@ -373,7 +383,15 @@ class MainActivity : ComponentActivity() {
                     .fillMaxWidth()
             ) {
                 Spacer(modifier = Modifier.weight(1.0f))
-                PlainTooltipBox(tooltip = { Text("Clear box") }) {
+                TooltipBox(
+                    positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                    tooltip = {
+                        PlainTooltip {
+                            Text("Clear box")
+                        }
+                    },
+                    state = rememberTooltipState(),
+                ) {
                     FilledIconButton(
                         onClick = {
                             if (valueIndex != -1) {
@@ -385,8 +403,7 @@ class MainActivity : ComponentActivity() {
                         },
                         modifier = Modifier
                             .width(72.dp)
-                            .padding(4.dp)
-                            .tooltipAnchor(),
+                            .padding(4.dp),
                         enabled = valueIndex != -1
                     ) {
                         Icon(
@@ -395,7 +412,15 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 }
-                PlainTooltipBox(tooltip = { Text("Solve box") }) {
+                TooltipBox(
+                    positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                    tooltip = {
+                        PlainTooltip {
+                            Text("Solve box")
+                        }
+                    },
+                    state = rememberTooltipState(),
+                ) {
                     FilledIconButton(
                         onClick = {
                             if (valueIndex != -1) {
@@ -407,8 +432,7 @@ class MainActivity : ComponentActivity() {
                         },
                         modifier = Modifier
                             .width(72.dp)
-                            .padding(4.dp)
-                            .tooltipAnchor(),
+                            .padding(4.dp),
                         enabled = valueIndex != -1
                     ) {
                         Icon(
@@ -434,7 +458,15 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             }*/
-                PlainTooltipBox(tooltip = { Text("Clear grid") }) {
+                TooltipBox(
+                    positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                    tooltip = {
+                        PlainTooltip {
+                            Text("Clear grid")
+                        }
+                    },
+                    state = rememberTooltipState(),
+                ) {
                     FilledIconButton(
                         onClick = {
                             viewModel.resetSelection()
@@ -442,8 +474,7 @@ class MainActivity : ComponentActivity() {
                         },
                         modifier = Modifier
                             .width(72.dp)
-                            .padding(4.dp)
-                            .tooltipAnchor(),
+                            .padding(4.dp),
                         enabled = viewModel.isSudokuCreated() && viewModel.isSudokuFilled()
                     ) {
                         Icon(
